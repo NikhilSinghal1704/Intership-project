@@ -87,6 +87,17 @@ def add_job(data, new_skills=None):
     if new_skills:
         add_skills(new_skills)
 
+def add_application(job_id, applicant_id):
+    applications_ref = db.reference("applications")
+    new_id = str(uuid.uuid4())
+    applications_ref.child(new_id).set({
+        "id": new_id,
+        "job_id": job_id,
+        "applicant_id": applicant_id,
+        "applied_at": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat(),
+        "status": "applied"
+    })
+
 # Get Functions
 
 def get_open_jobs():
@@ -105,4 +116,8 @@ def get_skills():
     ref = db.reference("skills")
     skills = ref.get()
     return skills if isinstance(skills, list) else []
+
+if __name__ == "__main__":
+    init_firebase()
+    print(get_open_jobs())
 

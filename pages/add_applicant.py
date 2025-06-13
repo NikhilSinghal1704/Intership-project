@@ -26,26 +26,6 @@ def app():
         )
 
         st.subheader("Professional Details")
-        
-        '''
-        selected_skills = st.multiselect(
-            "Select Existing Skills",
-            options=existing_skills,
-        )
-
-        new_skills_input = st.text_input(
-            "Add New Skills (comma-separated)",
-            help="Enter any new skills not in the list, separated by commas."
-        )
-
-        # Combine existing + new
-        if new_skills_input:
-            new_skills = [s.strip() for s in new_skills_input.split(",") if s.strip()]
-        else:
-            new_skills = []
-
-        combined_skills = list(set(selected_skills + new_skills))
-        '''
 
         skills_input = st.multiselect(
             "Skills (select or type to add new)",
@@ -88,7 +68,7 @@ def app():
                 }
 
                 # Process skills input
-                new_skills = set(skills_input) - set(existing_skills)
+                new_skills = list(set(skills_input) - set(existing_skills))
                 # Save to Firestore and update skill list
                 add_applicant(data, resume_file, new_skills=new_skills)
 

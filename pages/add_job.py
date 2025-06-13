@@ -59,13 +59,13 @@ def app():
                     "location": location,
                     "work_mode": work_mode,
                     "experience_required": experience_required,
-                    "Budget": Budget,
-                    "Vacancies": int(Vacancies),
+                    "budget": Budget,
+                    "vacancies": int(Vacancies),
                     "skills": required_skills,
                     "hiring_process": stages,
                     "description": description,
                     "posted_by": posted_by,
-                    "Status": "Open",
+                    "status": "open",
                 }
 
                 # Determine new skills
