@@ -33,6 +33,10 @@ with st.sidebar:
     if st.button("Add Job Opening"):
         st.session_state.page = "add_job"
 
+    st.subheader("📁 Applications")
+    if st.button("Add Application"):
+        st.session_state.page = "add_application"
+
     st.subheader("🚪 Logout")
     if st.button("Logout"):
         st.session_state.logged_in = False
@@ -46,6 +50,8 @@ if page == "add_applicant":
     __import__("pages.add_applicant", fromlist=["app"]).app()
 elif page == "add_job":
     __import__("pages.add_job", fromlist=["app"]).app()
+elif page == "add_application":
+    __import__("pages.add_application", fromlist=["app"]).app()
 else:
     st.title("Welcome!")
     st.markdown(f"👋 Hello, **{st.session_state.username}**. Use the sidebar to navigate.")

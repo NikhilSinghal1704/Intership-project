@@ -16,6 +16,8 @@ def init_firebase():
         })
     return db.reference("/")
 
+# Add Functions
+
 def add_skills(new_skills):
     """
     Merge and add new skills to the list stored in /skills.
@@ -26,14 +28,6 @@ def add_skills(new_skills):
     
     updated_skills = list(set(existing_skills + new_skills))
     ref.set(updated_skills)
-
-def get_skills():
-    """
-    Fetch the list of skills from the Realtime Database.
-    """
-    ref = db.reference("skills")
-    skills = ref.get()
-    return skills if isinstance(skills, list) else []
 
 def add_applicant(data, resume, new_skills=None):
     """
@@ -93,12 +87,22 @@ def add_job(data, new_skills=None):
     if new_skills:
         add_skills(new_skills)
 
-if __name__ == "__main__":
-    # Example usage
-    init_firebase()
-    db.reference('/').get()
-    add_applicant({
-        "name": "John Doe",
-        "phone": "1234567890",
-        "email": ""}, None)
-    print("Firebase initialized successfully.")
+# Get Functions
+
+def get_open_jobs():
+    ref = db.reference("jobs")
+    jobs = ref.order_by_child("status").equal_to("open").get()
+    return jobs or {}  # returns a dict of {job_id: job_data}
+
+def get_applicants():
+    ref = db.reference("applicants")
+    return ref.get() or {}  # returns {applicant_id: data}
+
+def get_skills():
+    """
+    Fetch the list of skills from the Realtime Database.
+    """
+    ref = db.reference("skills")
+    skills = ref.get()
+    return skills if isinstance(skills, list) else []
+
