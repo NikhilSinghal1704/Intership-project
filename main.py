@@ -1,67 +1,81 @@
 import streamlit as st
+from pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details
+
+# Setup
+st.set_page_config(page_title="Applicant Manager", layout="wide")
+
+# Import necessary modules
+import os
 from utils.firebase_helper import init_firebase
+from streamlit_cookies_manager import EncryptedCookieManager
 from pages import login
 
-# Set app-wide config once
-st.set_page_config(page_title="Applicant Manager", layout="wide")
+
 
 @st.cache_resource
 def initialize_firebase():
     return init_firebase()
 
+def get_cookies():
+    return EncryptedCookieManager(
+        prefix="applicant-manager/",
+        password=os.environ.get("COOKIES_PASSWORD", "default-cookie-pass")
+    )
+
+# Initialize DB and Cookies
 if "db" not in st.session_state:
     st.session_state.db = initialize_firebase()
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "selected_applicant" not in st.session_state:
-    st.session_state.selected_applicant = None
-if "page" not in st.session_state:
-    st.session_state.page = None
 
-# Login guard
-if not st.session_state.logged_in:
-    st.sidebar.subheader("🔐 Login")
-    st.sidebar.info("Please login to access tools.")
-    login.login_page()
+cookies = get_cookies()
+if not cookies.ready():
+    # Wait for cookie sync before rendering anything
     st.stop()
 
-# Sidebar navigation
-st.sidebar.title("📋 Navigation")
+# Load login state from cookies
+st.session_state.logged_in = cookies.get("logged_in") == "True"
+st.session_state.username = cookies.get("username", None)
 
-with st.sidebar:
-    st.subheader("👤 Applicant Tools")
-    if st.button("Add Applicant"):
-        st.session_state.page = "add_applicant"
-    if st.button("View Applicants"):
-        st.session_state.page = "view_applicants"
+# Initialize other session keys
+if "page" not in st.session_state:
+    st.session_state.page = None
+if "selected_applicant" not in st.session_state:
+    st.session_state.selected_applicant = None
 
-    st.subheader("💼 Job Management")
-    if st.button("Add Job Opening"):
-        st.session_state.page = "add_job"
 
-    st.subheader("📁 Applications")
-    if st.button("Add Application"):
-        st.session_state.page = "add_application"
 
-    st.subheader("🚪 Logout")
-    if st.button("Logout"):
-        st.session_state.clear()
-        st.rerun()
+# 🛡 Login guard
+if not st.session_state.logged_in:
+    pages= {
+        "Login": [
+            st.Page(lambda: login.login_page(cookies), title="Login", icon="🔐", url_path="login")
+        ]
+    }
+    st.sidebar.info("Please login to access tools.")
 
-# Default landing
-if st.session_state.page is None:
-    st.session_state.page = "view_applicants"
-
-# Page routing
-page = st.session_state.page
-
-if page == "add_applicant":
-    __import__("pages.add_applicant", fromlist=["app"]).app()
-elif page == "view_applicants":
-    __import__("pages.view_applicants", fromlist=["app"]).app()
-elif page == "add_job":
-    __import__("pages.add_job", fromlist=["app"]).app()
-elif page == "add_application":
-    __import__("pages.add_application", fromlist=["app"]).app()
 else:
-    st.error("Error: Unknown page: " + str(page))
+
+    # Define pages grouped by section
+    pages = {
+        "Dashboard": [
+            st.Page(dashboard.app, title="Dashboard", icon="📊", url_path="dashboard", default=True)
+        ],
+        "Applicant Tools": [
+            st.Page(add_applicant.app, title="Add Applicant", icon="➕", url_path="add_applicant"),
+            st.Page(view_applicants.app, title="View Applicants", icon="👁️", url_path="view_applicants"),
+            st.Page(applicant_details.app, title="Applicant Details", icon="📄", url_path="applicant_detail")
+        ],
+        "Job Management": [
+            st.Page(add_job.app, title="Add Job Opening", icon="💼", url_path="add_job"),
+        ],
+        "Applications": [
+            st.Page(add_application.app, title="Add Application", icon="📁", url_path="add_application"),
+        ],
+        "Account": [
+            st.Page(lambda: login.logout_page(cookies), title="Logout", icon="🚪", url_path="logout"),
+        ],
+    }
+
+
+current_page = st.navigation(pages, position="sidebar")
+current_page.run()
+

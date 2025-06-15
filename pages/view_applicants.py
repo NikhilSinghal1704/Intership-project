@@ -1,4 +1,5 @@
 import streamlit as st
+#from streamlit_extras.switch_page_button import switch_page
 import pandas as pd
 from urllib.parse import quote
 from utils.firebase_helper import get_applicants
@@ -15,7 +16,7 @@ def app():
 
     rows = []
     for aid, data in applicants.items():
-        link = f"?page=pages.applicant_detail&uid={quote(aid)}"
+        link = f"/applicant_details?uid={quote(aid)}"
         rows.append({
             "UUID": aid,
             "Details": link,
