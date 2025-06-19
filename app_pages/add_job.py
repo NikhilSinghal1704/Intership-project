@@ -37,7 +37,7 @@ def app():
         st.subheader("Hiring Process")
         stages_input = st.text_input(
             "Stages (comma-separated, in order)",
-            placeholder="e.g. Sourcing, Screening, Interview, Offer, Onboarding"
+            placeholder="e.g. Sourcing, Screening, Interview, Offer, Onboarding (don't include 'applied', 'rejected' or 'hired')",
         )
 
         st.subheader("Job Description")
@@ -53,6 +53,8 @@ def app():
             else:
                 # Parse stages
                 stages = [s.strip() for s in stages_input.split(",") if s.strip()]
+                stages.insert(0, "applied")
+                stages.append("hired")
                 job_data = {
                     "job_title": job_title,
                     "department": department,

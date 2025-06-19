@@ -16,6 +16,7 @@ def init_firebase():
         })
     return db.reference("/")
 
+
 # Add Functions
 
 def add_skills(new_skills):
@@ -95,8 +96,10 @@ def add_application(job_id, applicant_id):
         "job_id": job_id,
         "applicant_id": applicant_id,
         "applied_at": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat(),
-        "status": "applied"
+        "status": "applied",
+        "rejected": "false"
     })
+
 
 # Get Functions
 
@@ -112,6 +115,13 @@ def get_applicants(uids=None):
         return {uid: data for uid, data in all_apps.items() if uid in uids}
     return all_apps
 
+def get_jobs(jobids=None):
+    ref = db.reference("jobs")
+    all_jobs = ref.get() or {}
+    if jobids:
+        return {jobid: data for jobid, data in all_jobs.items() if jobid in jobids}
+    return all_jobs
+
 def get_applications_for_applicant(uid):
     ref = db.reference("applications")
     apps = ref.order_by_child("applicant_id").equal_to(uid).get()
@@ -125,9 +135,33 @@ def get_skills():
     skills = ref.get()
     return skills if isinstance(skills, list) else []
 
+
+# Update Functions
+
+def update_application_status(app_id: str, new_status: str) -> None:
+    """
+    Update the 'status' field of an application document in Firestore.
+    """
+    app_ref = db.reference(f"applications/{app_id}/status")
+    app_ref.set(new_status)
+
+def reject_application(app_id: str, value: str) -> None:
+    """
+    Mark an application as rejected by setting 'rejected' to True.
+    """
+    app_ref = db.reference(f"applications/{app_id}/rejected")
+    app_ref.set(value)
+
 # Delete Functions
+
 def delete_applicant(uid):
     db.reference(f"applicants/{uid}").delete()
+
+def delete_application(app_id: str) -> None:
+    """
+    Delete an application document from Firestore by ID.
+    """
+    db.reference(f"applications/{app_id}").delete()
 
 if __name__ == "__main__":
     init_firebase()

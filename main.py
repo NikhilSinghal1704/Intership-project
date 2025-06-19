@@ -1,5 +1,5 @@
 import streamlit as st
-from app_pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details, login, logout
+from app_pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details, login, logout, add_user
 
 # Setup
 st.set_page_config(page_title="Applicant Manager", layout="wide")
@@ -55,6 +55,9 @@ else:
             st.Page(logout.app, title="Logout", icon="🚪", url_path="logout"),
         ],
     }
+
+if st.session_state.get("username") == "admin":
+    pages["Account"].append(st.Page(add_user.app, title="Add User", icon="🛠️", url_path="add_user"))
 
 
 current_page = st.navigation(pages, position="sidebar")
