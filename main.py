@@ -1,5 +1,5 @@
 import streamlit as st
-from pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details
+from app_pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details, login, logout
 
 # Setup
 st.set_page_config(page_title="Applicant Manager", layout="wide")
@@ -7,47 +7,28 @@ st.set_page_config(page_title="Applicant Manager", layout="wide")
 # Import necessary modules
 import os
 from utils.firebase_helper import init_firebase
-from streamlit_cookies_manager import EncryptedCookieManager
-from pages import login
+from utils.auth import auto_login
 
 
 
-@st.cache_resource
+# Initialize Firebase connection
 def initialize_firebase():
     return init_firebase()
-
-def get_cookies():
-    return EncryptedCookieManager(
-        prefix="applicant-manager/",
-        password=os.environ.get("COOKIES_PASSWORD", "default-cookie-pass")
-    )
 
 # Initialize DB and Cookies
 if "db" not in st.session_state:
     st.session_state.db = initialize_firebase()
 
-cookies = get_cookies()
-if not cookies.ready():
-    # Wait for cookie sync before rendering anything
-    st.stop()
-
-# Load login state from cookies
-st.session_state.logged_in = cookies.get("logged_in") == "True"
-st.session_state.username = cookies.get("username", None)
-
-# Initialize other session keys
-if "page" not in st.session_state:
-    st.session_state.page = None
-if "selected_applicant" not in st.session_state:
-    st.session_state.selected_applicant = None
-
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+auto_login()
 
 
 # 🛡 Login guard
 if not st.session_state.logged_in:
     pages= {
         "Login": [
-            st.Page(lambda: login.login_page(cookies), title="Login", icon="🔐", url_path="login")
+            st.Page(login.app, title="Login", icon="🔐", url_path="login")
         ]
     }
     st.sidebar.info("Please login to access tools.")
@@ -71,11 +52,10 @@ else:
             st.Page(add_application.app, title="Add Application", icon="📁", url_path="add_application"),
         ],
         "Account": [
-            st.Page(lambda: login.logout_page(cookies), title="Logout", icon="🚪", url_path="logout"),
+            st.Page(logout.app, title="Logout", icon="🚪", url_path="logout"),
         ],
     }
 
 
 current_page = st.navigation(pages, position="sidebar")
 current_page.run()
-

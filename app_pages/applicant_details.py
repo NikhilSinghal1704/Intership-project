@@ -7,11 +7,13 @@ def app():
         st.stop()
 
     # Access URL query parameters
-    query_params = st.query_params
-    uid = query_params.get("aid", None)
+    params = st.query_params
+    uid = params.get("uid", [None])
+    st.write("Selected UID:", uid)
 
     if not uid:
         st.info("UID not found in URL—please select an applicant from the list.")
+        print(params)
         return
 
     data = get_applicants().get(uid)

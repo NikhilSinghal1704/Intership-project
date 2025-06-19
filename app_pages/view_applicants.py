@@ -16,7 +16,7 @@ def app():
 
     rows = []
     for aid, data in applicants.items():
-        link = f"/applicant_details?uid={quote(aid)}"
+        link = f"/applicant_detail?uid={aid}"
         rows.append({
             "UUID": aid,
             "Details": link,
