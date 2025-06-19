@@ -1,5 +1,5 @@
 import streamlit as st
-from app_pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details, login, logout, add_user
+from app_pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details, login, logout, add_user, view_jobs, job_details
 
 # Setup
 st.set_page_config(page_title="Applicant Manager", layout="wide")
@@ -47,6 +47,8 @@ else:
         ],
         "Job Management": [
             st.Page(add_job.app, title="Add Job Opening", icon="💼", url_path="add_job"),
+            st.Page(view_jobs.app, title="Available Jobs", icon="💼", url_path="view_jobs"),
+            st.Page(job_details.app, title="Job Details", icon="📄", url_path="job_details"),
         ],
         "Applications": [
             st.Page(add_application.app, title="Add Application", icon="📁", url_path="add_application"),
