@@ -1,29 +1,40 @@
 import streamlit as st
-from utils.firebase_helper import get_applicants
+from utils.firebase_helper import get_applicants, get_applications_for_applicant, delete_applicant
 
 def app():
-    if not st.session_state.get("logged_in", False):
-        st.error("🚫 Please log in.")
-        st.stop()
-
-    # Access URL query parameters
-    params = st.query_params
-    uid = params.get("uid", [None])
-    st.write("Selected UID:", uid)
-
+    uid = st.query_params.get("uid", [None])
     if not uid:
-        st.info("UID not found in URL—please select an applicant from the list.")
-        print(params)
+        st.info("Select an applicant from the list.")
         return
-
-    data = get_applicants().get(uid)
+    data = get_applicants([uid]).get(uid)
     if not data:
-        st.error(f"Applicant with ID {uid} not found.")
+        st.error(f"Applicant not found: {uid}")
         return
 
-    st.header(f"{data['name']} ({uid})")
-    st.markdown(f"**Email:** {data['email']}  ")
-    st.markdown(f"**Skills:** {', '.join(data.get('skills', []))}")
-    st.markdown(f"**Experience:** {data.get('experience')} years")
-    st.markdown(f"**Location:** {data.get('location')}")
-    st.markdown(f"**Resume Path:** {data.get('resume_url','N/A')}")
+    tabs = st.tabs(["Details", "Applications", "Delete"])
+    with tabs[0]:
+        st.subheader("👤 Applicant Details")
+        st.write(f"**Name:** {data['name']}")
+        st.write(f"**Email:** {data['email']}")
+        st.write(f"**Phone:** {data['phone']}")
+        st.write(f"**Skills:** {', '.join(data.get('skills', []))}")
+        st.write(f"**Education:** {data.get('education')} / {data.get('institute')}")
+        st.write(f"**Experience:** {data.get('experience')} years, CTC: {data.get('ctc')}")
+        st.write(f"**Location:** {data.get('location')}, Mode: {data.get('work_mode')}")
+        st.write(f"**Resume:** {data.get('resume_url')}")
+
+    with tabs[1]:
+        st.subheader("📄 Applications")
+        apps = get_applications_for_applicant(uid)
+        if not apps:
+            st.write("No applications found.")
+        else:
+            for app_id, app_data in apps.items():
+                st.markdown(f"- **{app_data['job_id']}** (ID: {app_id}) — Status: {app_data.get('status')}")
+
+    with tabs[2]:
+        st.subheader("⚠️ Delete Applicant")
+        if st.button("Delete Applicant"):
+            delete_applicant(uid)  # you need to implement this
+            st.success("Applicant deleted.")
+            st.experimental_set_query_params()  # clear URL

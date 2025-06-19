@@ -105,9 +105,17 @@ def get_open_jobs():
     jobs = ref.order_by_child("status").equal_to("open").get()
     return jobs or {}  # returns a dict of {job_id: job_data}
 
-def get_applicants():
+def get_applicants(uids=None):
     ref = db.reference("applicants")
-    return ref.get() or {}  # returns {applicant_id: data}
+    all_apps = ref.get() or {}
+    if uids:
+        return {uid: data for uid, data in all_apps.items() if uid in uids}
+    return all_apps
+
+def get_applications_for_applicant(uid):
+    ref = db.reference("applications")
+    apps = ref.order_by_child("applicant_id").equal_to(uid).get()
+    return apps or {}
 
 def get_skills():
     """
@@ -116,6 +124,10 @@ def get_skills():
     ref = db.reference("skills")
     skills = ref.get()
     return skills if isinstance(skills, list) else []
+
+# Delete Functions
+def delete_applicant(uid):
+    db.reference(f"applicants/{uid}").delete()
 
 if __name__ == "__main__":
     init_firebase()
