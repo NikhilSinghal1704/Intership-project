@@ -30,6 +30,17 @@ def add_skills(new_skills):
     updated_skills = list(set(existing_skills + new_skills))
     ref.set(updated_skills)
 
+def add_clients(new_clients):
+    """
+    Merge and add new clients to the list stored in /clients.
+    """
+    ref = db.reference("clients")
+    existing = ref.get()
+    existing_clients = existing if isinstance(existing, list) else []
+    
+    updated_clients = list(set(existing_clients + new_clients))
+    ref.set(updated_clients)
+
 def add_applicant(data, resume, new_skills=None):
     """
     Save applicant data to Firestore and update skills list if new ones are added.
@@ -74,7 +85,7 @@ def upload_resume_to_firebase(applicant_id, file):
 
     return file_path
 
-def add_job(data, new_skills=None):
+def add_job(data, new_skills=None, client=None):
     """
     Save job opening data to Firestore.
     """
@@ -87,6 +98,8 @@ def add_job(data, new_skills=None):
 
     if new_skills:
         add_skills(new_skills)
+    if client:
+        add_clients([client])
 
 def add_application(job_id, applicant_id):
     applications_ref = db.reference("applications")
@@ -134,6 +147,15 @@ def get_skills():
     ref = db.reference("skills")
     skills = ref.get()
     return skills if isinstance(skills, list) else []
+
+def get_clients():
+    """
+    Fetch the list of skills from the Realtime Database.
+    """
+    ref = db.reference("clients")
+    clients = ref.get()
+    return clients if isinstance(clients, list) else []
+
 
 
 # Update Functions

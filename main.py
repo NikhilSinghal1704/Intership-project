@@ -5,7 +5,6 @@ from app_pages import add_applicant, view_applicants, add_job, add_application, 
 st.set_page_config(page_title="Applicant Manager", layout="wide")
 
 # Import necessary modules
-import os
 from utils.firebase_helper import init_firebase
 from utils.auth import auto_login
 
