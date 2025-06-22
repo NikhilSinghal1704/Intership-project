@@ -9,7 +9,7 @@ import os
 
 def init_firebase():
     if not firebase_admin._apps:
-        cred = credentials.Certificate("/home/nik/Projects/Intership project/utils/cred.json")
+        cred = credentials.Certificate("cred.json")
         firebase_admin.initialize_app(cred, {
             "databaseURL" : "https://test-1f76f-default-rtdb.asia-southeast1.firebasedatabase.app/",
             #"storageBucket": "test-1f76f.appspot.com"

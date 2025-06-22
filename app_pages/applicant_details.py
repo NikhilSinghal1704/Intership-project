@@ -65,7 +65,7 @@ def render_app_card(app_id, app_data):
 
 
 def app():
-    uid = st.query_params.get("uid", [None])
+    uid = st.query_params.get("uid", None)
     if not uid:
         st.info("Select an applicant from the list.")
         return

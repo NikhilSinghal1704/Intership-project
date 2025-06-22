@@ -1,3 +1,4 @@
-utils/cred.json
+cred.json
 __pycache__/
 .env
+users.json
