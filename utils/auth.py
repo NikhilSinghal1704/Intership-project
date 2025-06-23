@@ -1,13 +1,16 @@
 import streamlit as st
 import bcrypt, os, json
 from datetime import datetime
-from streamlit_cookies_manager import CookieManager
+from streamlit_cookies_manager import EncryptedCookieManager
 
 
-cookies = CookieManager()
+cookies = EncryptedCookieManager(
+    prefix="nikhil/streamlit-cookies-manager/",
+    password=os.environ.get("COOKIES_PASSWORD", "default-cookie-pass"),
+)
 if not cookies.ready():
     st.error("Cookies are not ready. Please refresh the page.")
-    #print("Cookies are not ready. Please refresh the page.")
+    st.spinner()
     st.stop()
 
 # Function to hash a password using bcrypt

@@ -156,6 +156,35 @@ def get_clients():
     clients = ref.get()
     return clients if isinstance(clients, list) else []
 
+def get_vacancies(breakdown=False):
+    """
+    Compute total vacancies and breakdown by department for open jobs.
+    
+    Returns:
+        total_vacancies (int): sum of vacancies for all open jobs.
+        vacancies_by_dept (dict): mapping from department name to total vacancies.
+    """
+    open_jobs = get_open_jobs()  # uses your existing helper to fetch open jobs dict
+    total = 0
+    vacancies_by_dept = {}
+    vacancies_by_mode = {}
+    for job_id, data in open_jobs.items():
+        # Treat missing or non-int as 0
+        vac = data.get("vacancies", 0) or 0
+        try:
+            vac = int(vac)
+        except (ValueError, TypeError):
+            vac = 0
+        total += vac
+        dept = data.get("department") or "Unknown"
+        vacancies_by_dept[dept] = vacancies_by_dept.get(dept, 0) + vac
+        mode = data.get("work_mode") or "Unknown"
+        vacancies_by_mode[mode] = vacancies_by_mode.get(mode, 0) + vac
+
+    if breakdown:
+        return total, vacancies_by_dept, vacancies_by_mode
+    return total
+
 
 
 # Update Functions
@@ -187,5 +216,6 @@ def delete_application(app_id: str) -> None:
 
 if __name__ == "__main__":
     init_firebase()
-    print(get_open_jobs())
+    print(len(get_open_jobs()))
+    print(get_vacancies())
 
