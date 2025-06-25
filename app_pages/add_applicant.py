@@ -41,7 +41,9 @@ def app():
         ctc = st.number_input("Annual CTC (in INR)", min_value=0.0, step=1000.0)
 
         st.subheader("Work Details")
-        location = st.text_input("Current Location")
+        City = st.text_input("Current City")
+        State = st.text_input("Current State")
+        Country = st.text_input("Current Country", value="India")
         work_mode = st.selectbox("Current Work Mode", ["Onsite", "Remote", "Hybrid"])
 
         st.subheader("Resume Upload")
@@ -50,7 +52,9 @@ def app():
         submitted = st.form_submit_button("Add Applicant")
 
         if submitted:
-            if not name or not phone or not email or not location or not resume_file:
+            required_fields = [name, phone, email, skills_input, education, institute, City, State, Country, resume_file]
+            if not all(required_fields):
+                print(all(required_fields))
                 st.warning("Please fill in all required fields.")
             else:
                 data = {
@@ -63,7 +67,9 @@ def app():
                     "institute": institute,
                     "experience": experience,
                     "ctc": ctc,
-                    "location": location,
+                    "city": City,
+                    "state": State,
+                    "country": Country,
                     "work_mode": work_mode,
                 }
 

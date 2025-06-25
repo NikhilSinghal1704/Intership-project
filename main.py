@@ -6,7 +6,7 @@ st.set_page_config(page_title="Applicant Manager", layout="wide")
 
 # Import necessary modules
 from utils.firebase_helper import init_firebase
-from utils.auth import auto_login
+from utils.auth import auto_login, initialize_session
 
 
 
@@ -18,8 +18,9 @@ def initialize_firebase():
 if "db" not in st.session_state:
     st.session_state.db = initialize_firebase()
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+st.session_state.logged_in = False
+st.session_state.username = None
+initialize_session()
 auto_login()
 
 

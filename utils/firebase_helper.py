@@ -140,6 +140,11 @@ def get_applications_for_applicant(uid):
     apps = ref.order_by_child("applicant_id").equal_to(uid).get()
     return apps or {}
 
+def get_applications_for_jobs(uid):
+    ref = db.reference("applications")
+    apps = ref.order_by_child("job_id").equal_to(uid).get()
+    return apps or {}
+
 def get_skills():
     """
     Fetch the list of skills from the Realtime Database.

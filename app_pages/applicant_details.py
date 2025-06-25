@@ -65,6 +65,12 @@ def render_app_card(app_id, app_data):
 
 
 def app():
+
+    # 🛑 Login guard
+    if not st.session_state.get("logged_in", False):
+        st.error("🚫 You must be logged in.")
+        st.stop()
+
     uid = st.query_params.get("uid", None)
     if not uid:
         st.info("Select an applicant from the list.")
@@ -74,7 +80,7 @@ def app():
         st.error(f"Applicant not found: {uid}")
         return
 
-    tabs = st.tabs(["Details", "Applications", "Delete"])
+    tabs = st.tabs(["Details", "Applications"])
     with tabs[0]:
         st.subheader("👤 Applicant Details")
         st.write(f"**Name:** {data['name']}")
@@ -83,8 +89,24 @@ def app():
         st.write(f"**Skills:** {', '.join(data.get('skills', []))}")
         st.write(f"**Education:** {data.get('education')} / {data.get('institute')}")
         st.write(f"**Experience:** {data.get('experience')} years, CTC: {data.get('ctc')}")
-        st.write(f"**Location:** {data.get('location')}, Mode: {data.get('work_mode')}")
+        st.write(f"**Location:** {data.get('city') + data.get('state') + data.get('country')}, Mode: {data.get('work_mode')}")
         st.write(f"**Resume:** {data.get('resume_url')}")
+
+        st.subheader("⚠️ Delete Applicant")
+        st.warning("This action will permanently delete the applicant and all associated applications.")
+
+        if st.button("🗑️ Delete Applicant"):
+            delete_applicant(uid)  # You said this is implemented
+            st.success("✅ Applicant deleted successfully.")
+
+            # Clear query params
+            st.query_params.clear()
+
+            # Optional: Small delay or spinner
+            st.toast("Redirecting...", icon="🔁")
+
+            # Trigger a rerun to reflect state
+            st.rerun()
 
     with tabs[1]:
         st.subheader("📄 Applications")
@@ -96,11 +118,3 @@ def app():
         # Render all application cards
         for aid, ad in apps.items():
             render_app_card(aid, ad)
-
-
-    with tabs[2]:
-        st.subheader("⚠️ Delete Applicant")
-        if st.button("Delete Applicant"):
-            delete_applicant(uid)  # you need to implement this
-            st.success("Applicant deleted.")
-            st.experimental_set_query_params()  # clear URL

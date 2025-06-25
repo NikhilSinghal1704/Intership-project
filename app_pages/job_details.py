@@ -2,6 +2,12 @@ import streamlit as st
 from utils.firebase_helper import get_jobs
 
 def app():
+
+    # 🛑 Login guard
+    if not st.session_state.get("logged_in", False):
+        st.error("🚫 You must be logged in.")
+        st.stop()
+
     params = st.query_params
     job_id = params.get("job_id", None)
     if not job_id:

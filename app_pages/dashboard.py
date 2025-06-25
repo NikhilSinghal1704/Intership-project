@@ -1,8 +1,14 @@
 import streamlit as st
 import plotly.express as px
-from utils.firebase_helper import get_clients, get_open_jobs, get_applicants, get_jobs, get_vacancies
+from utils.firebase_helper import get_clients, get_open_jobs, get_applicants, get_vacancies
 
 def app():
+    
+    # 🛑 Login guard
+    if not st.session_state.get("logged_in", False):
+        st.error("🚫 You must be logged in.")
+        st.stop()
+
     st.set_page_config(page_title="Dashboard", layout="wide")
     st.title("📊 Dashboard")
 
@@ -38,7 +44,7 @@ def app():
     # Fetch data
     total_clients = len(get_clients())
     total_applicants = len(get_applicants())
-    total_job_posts = len(get_jobs())  # or len(get_open_jobs()) if you want only open
+    total_job_posts = len(get_open_jobs())
     total_vacancies, vacancies_by_dept, vacancies_by_mode = get_vacancies(breakdown=True)
 
     # Layout: 4 columns for metrics
@@ -53,16 +59,10 @@ def app():
     cols[3].markdown(f'<div class="metric-card"><h3>Job Posts</h3><div class="value">{total_job_posts}</div></div>',
                      unsafe_allow_html=True)
 
-    # Option 2: animated counters instead (uncomment if desired)
-    # animate_counter("Clients", total_clients, cols[0])
-    # animate_counter("Open Vacancies", total_vacancies, cols[1])
-    # animate_counter("Applicants", total_applicants, cols[2])
-    # animate_counter("Job Posts", total_job_posts, cols[3])
-
     st.markdown("---")
 
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.subheader("Vacancies by Department")
         if vacancies_by_dept:
@@ -76,7 +76,7 @@ def app():
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No open vacancies found.")
-    
+
     with col2:
         st.subheader("Vacancies by Work Mode")
         if vacancies_by_mode:

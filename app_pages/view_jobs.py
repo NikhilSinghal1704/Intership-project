@@ -1,54 +1,111 @@
 import streamlit as st
-from utils.firebase_helper import get_jobs
+import pandas as pd
+from utils.firebase_helper import get_jobs, get_applications_for_jobs
+from datetime import datetime, timedelta
 
 def app():
-    st.title("📂 Available Jobs")
+
+    # 🛑 Login guard
+    if not st.session_state.get("logged_in", False):
+        st.error("🚫 You must be logged in.")
+        st.stop()
+
+    st.title("📋 All Job Listings")
+
     jobs = get_jobs()
+
     if not jobs:
-        st.info("No jobs posted yet.")
+        st.info("No job postings found.")
         return
-    
-    st.markdown("""
-        <style>
-        .job-card {
-          border: 1px solid #ADD8E6;
-          border-radius: 8px;
-          padding: 16px;
-          margin-bottom: 16px;
-          transition: border 0.2s;
-        }
-        .job-card:hover {
-          border: 2px solid #0D47A1;
-        }
-        .job-card a {
-          text-decoration: none;
-          color: inherit;
-          display: block;
-        }
-        </style>
-        """, unsafe_allow_html=True)
 
-
-    st.markdown("""<!-- force HTML rendering -->""", unsafe_allow_html=True)
-
+    rows = []
     for job_id, job in jobs.items():
-        # Extract fields
-        title = job.get("job_title", "Untitled")
-        dept = job.get("department", "-")
-        budget = job.get("budget", "-")
-        posted_at = job.get("posted_at", "").split("T")[0] if job.get("posted_at") else "-"
-        posted_by = job.get("posted_by", "-")
+        applications = get_applications_for_jobs(job_id)
+        applicant_count = len(applications) if applications else 0
 
-        # Build HTML card wrapped in link
-        card_html = f"""
-        <div class="job-card">
-          <a href="/job_details?job_id={job_id}">
-            <h3>{title}</h3>
-            <p><b>Department:</b> {dept}</p>
-            <p><b>Budget:</b> {budget}</p>
-            <p><b>Posted on:</b> {posted_at}</p>
-            <p><b>Posted by:</b> {posted_by}</p>
-          </a>
-        </div>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
+        posted_at = job.get("posted_at", "")
+        posted_on = posted_at.split("T")[0] if posted_at else "-"
+
+        rows.append({
+            "ID": job_id,
+            "Title": job.get("job_title", "-"),
+            "Location": job.get("location", "-"),
+            "Work Mode": job.get("work_mode", "-"),
+            "Vacancies": job.get("vacancies", "-"),
+            "Applicants": applicant_count,
+            "Status": job.get("status", "open").capitalize(),
+            "Posted On": posted_on,
+            "Details": f"[🔍 View](/job_details?job_id={job_id})"
+        })
+
+    df = pd.DataFrame(rows)
+    df["Posted On"] = pd.to_datetime(df["Posted On"], errors="coerce")
+
+    # -------------------- FILTERS --------------------
+    with st.sidebar:
+        st.header("🔎 Filter Jobs")
+
+        title_search = st.text_input("Search by Title")
+
+        location_filter = st.selectbox(
+            "📍 Location",
+            options=["All"] + sorted(df["Location"].dropna().unique().tolist())
+        )
+
+        mode_filter = st.selectbox(
+            "💼 Work Mode",
+            options=["All"] + sorted(df["Work Mode"].dropna().unique().tolist())
+        )
+
+        status_filter = st.selectbox(
+            "📌 Status",
+            options=["All"] + sorted(df["Status"].dropna().unique().tolist())
+        )
+
+        date_filter = st.selectbox(
+            "🗓️ Posted Date",
+            options=["All Time", "Today", "This Week", "This Month", "This Year"]
+        )
+
+    # -------------------- APPLY FILTERS --------------------
+    if title_search:
+        df = df[df["Title"].str.contains(title_search, case=False, na=False)]
+
+    if location_filter != "All":
+        df = df[df["Location"] == location_filter]
+
+    if mode_filter != "All":
+        df = df[df["Work Mode"] == mode_filter]
+
+    if status_filter != "All":
+        df = df[df["Status"] == status_filter]
+
+    now = datetime.now()
+    if date_filter != "All Time":
+        if date_filter == "Today":
+            start_date = now.date()
+        elif date_filter == "This Week":
+            start_date = (now - timedelta(days=now.weekday())).date()
+        elif date_filter == "This Month":
+            start_date = now.replace(day=1).date()
+        elif date_filter == "This Year":
+            start_date = now.replace(month=1, day=1).date()
+
+        df = df[df["Posted On"].dt.date >= start_date]
+
+    # Reformat date for display
+    df["Posted On"] = df["Posted On"].dt.strftime("%Y-%m-%d")
+
+    st.markdown("### 📊 Filtered Job Results")
+    st.dataframe(
+        df,
+        column_config={
+            "Details": st.column_config.LinkColumn(
+                label="Details",
+                help="Click to view job details",
+                display_text="View"
+            )
+        },
+        hide_index=True,
+        use_container_width=True
+    )

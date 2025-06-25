@@ -2,6 +2,11 @@ import streamlit as st
 from utils.auth import save_user, load_users, hash_password
 
 def app():
+    # 🛑 Login guard
+    if not st.session_state.get("logged_in", False):
+        st.error("🚫 You must be logged in.")
+        st.stop()
+    
     st.title("➕ Add User")
     st.write("Enter a new username and password to register a new user.")
 

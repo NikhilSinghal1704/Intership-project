@@ -46,7 +46,7 @@ def login(username, password):
         st.success(f"Logged in as {username}")
         st.session_state.logged_in = True
         st.session_state.last_activity_time = datetime.now()
-        st.rerun()  # Use st.rerun() here instead of st.experimental_rerun()
+        st.rerun()
     else:
         st.error("Invalid username or password!")
 
