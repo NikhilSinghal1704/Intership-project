@@ -67,6 +67,11 @@ def app():
             "Stages (comma-separated, in order)",
             placeholder="e.g. Sourcing, Screening, Interview, Offer"
         )
+        job_duration = st.selectbox(
+            "Job Duration",
+            options=["Full Time", "Contractual (6+6)", "Contractual (1 year )", "Internship"],
+            help="Select the type of job duration."
+        )
         st.markdown('</section>', unsafe_allow_html=True)
 
         # Section 3: Description & Benefits
@@ -97,6 +102,7 @@ def app():
                     "vacancies": int(vacancies),
                     "skills": required_skills,
                     "hiring_process": stages,
+                    "job_duration": job_duration,
                     "description": description,
                     "responsibilities": responsibilities,
                     "benefits": benefits,

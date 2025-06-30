@@ -1,5 +1,5 @@
 import streamlit as st
-from app_pages import add_applicant, view_applicants, add_job, add_application, dashboard, applicant_details, login, logout, add_user, view_jobs, job_details
+from app_pages import view_applicants, add_job, add_application, dashboard, applicant_details, login, logout, add_user, view_jobs, job_details, add_applicant
 
 # Setup
 st.set_page_config(page_title="Applicant Manager", layout="wide")

@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from utils.firebase_helper import get_applicants, get_applications_for_applicant, delete_applicant, get_jobs, update_application_status, delete_application, reject_application
 
 
@@ -82,15 +83,63 @@ def app():
 
     tabs = st.tabs(["Details", "Applications"])
     with tabs[0]:
-        st.subheader("👤 Applicant Details")
-        st.write(f"**Name:** {data['name']}")
-        st.write(f"**Email:** {data['email']}")
-        st.write(f"**Phone:** {data['phone']}")
-        st.write(f"**Skills:** {', '.join(data.get('skills', []))}")
-        st.write(f"**Education:** {data.get('education')} / {data.get('institute')}")
-        st.write(f"**Experience:** {data.get('experience')} years, CTC: {data.get('ctc')}")
-        st.write(f"**Location:** {data.get('city') + data.get('state') + data.get('country')}, Mode: {data.get('work_mode')}")
-        st.write(f"**Resume:** {data.get('resume_url')}")
+        st.title(f"👤 {data['name']}")
+
+        # --- Table for top metrics (2 rows, 4 columns) ---
+
+        # Define the labels and values
+        personal_details = {
+            "📧 Email" : [data.get('email')],
+            "📞 Phone" : [data.get('phone')],
+            "🏙️ Location" : [f"{data.get('city','')}, {data.get('state','')}, {data.get('country','')}"],
+            "⏳ Total Exp (yrs)" : [f"{data.get('experience', 0):.1f}"]
+        }
+            
+
+        # Build a DataFrame style table with no headers
+        df_top = pd.DataFrame(personal_details)
+        st.dataframe(df_top, hide_index=True, use_container_width=True)
+
+        st.markdown("---")
+
+        # --- Two-column layout for Education & Skills and Work/Resume ---
+
+        left, right = st.columns(2)
+
+        with left:
+            st.subheader("🎓 Education")
+            st.write(f"**Course:** {data.get('course', '-')}")
+            st.write(f"**Specialization:** {data.get('specialization', '-')}")
+            st.write(f"**Institute:** {data.get('institute', '-')}")
+            st.write(f"**Current CTC:** ₹{data.get('ctc', '-'):,}")
+
+            st.markdown("### 🛠️ Skills & Experience")
+
+            # Build skill table: each row "Skill | Years"
+            skill_items = data.get("skills", {})
+            if skill_items:
+                df_skills = pd.DataFrame(
+                    [(s, f"{yoe:.1f}") for s, yoe in skill_items.items()],
+                    columns=["Skill", "Years"]
+                )
+                st.dataframe(df_skills, hide_index=True, use_container_width=True)
+            else:
+                st.write("No skills recorded.")
+
+        with right:
+            st.subheader("🏢 Work Details")
+            st.write(f"**Current Mode:** {data.get('current_mode','-')} | **Duration:** {data.get('current_duration','-')}")
+            st.write(f"**Preferred Mode:** {data.get('preferred_mode','-')} | **Duration:** {data.get('preferred_duration','-')}")
+            st.write(f"**Source:** {data.get('source','-')}")
+
+            st.subheader("📁 Resume")
+            resume = data.get("resume_url")
+            if resume:
+                st.markdown(f"[Download Resume]({resume})")
+            else:
+                st.write("No resume uploaded.")
+
+        st.markdown("---")
 
         st.subheader("⚠️ Delete Applicant")
         st.warning("This action will permanently delete the applicant and all associated applications.")

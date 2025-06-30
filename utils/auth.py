@@ -1,8 +1,10 @@
 import streamlit as st
+from dotenv import load_dotenv
 import bcrypt, os, json
 from datetime import datetime
 from streamlit_cookies_manager import EncryptedCookieManager
 
+load_dotenv()
 
 cookies = EncryptedCookieManager(
     prefix="nikhil/streamlit-cookies-manager/",
@@ -23,7 +25,7 @@ def check_password(stored_hash, password):
 # Function to load users from a JSON file
 def load_users():
     try:
-        with open("users.json", "r") as f:
+        with open(os.environ.get("user_file"), "r") as f:
             users = json.load(f)
         return users
     except FileNotFoundError:
@@ -33,7 +35,7 @@ def load_users():
 def save_user(username, password_hash):
     users = load_users()
     users[username] = password_hash.decode("utf-8")
-    with open("users.json", "w") as f:
+    with open(os.environ.get("user_file"), "w") as f:
         json.dump(users, f)
 
 # Function to manage login

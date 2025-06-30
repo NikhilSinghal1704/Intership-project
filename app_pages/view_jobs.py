@@ -35,7 +35,7 @@ def app():
             "Applicants": applicant_count,
             "Status": job.get("status", "open").capitalize(),
             "Posted On": posted_on,
-            "Details": f"[🔍 View](/job_details?job_id={job_id})"
+            "Details": f"/job_details?job_id={job_id}"
         })
 
     df = pd.DataFrame(rows)

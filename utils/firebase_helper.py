@@ -5,11 +5,14 @@ from zoneinfo import ZoneInfo
 import uuid
 import mimetypes
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def init_firebase():
     if not firebase_admin._apps:
-        cred = credentials.Certificate("cred.json")
+        cred = credentials.Certificate(os.environ.get("cred_file"))
         firebase_admin.initialize_app(cred, {
             "databaseURL" : "https://test-1f76f-default-rtdb.asia-southeast1.firebasedatabase.app/",
             #"storageBucket": "test-1f76f.appspot.com"
@@ -40,6 +43,27 @@ def add_clients(new_clients):
     
     updated_clients = list(set(existing_clients + new_clients))
     ref.set(updated_clients)
+
+def add_education(course, specialization):
+
+    course = course.strip()
+    specialization = specialization.strip()
+
+    if not course or not specialization:
+        return
+
+    ref = db.reference("education")
+
+    current_data = ref.get() or {}
+
+    if course in current_data:
+        existing_specs = current_data[course]
+        if specialization not in existing_specs:
+            existing_specs.append(specialization)
+            ref.child(course).set(existing_specs)
+    else:
+        ref.child(course).set([specialization])
+    
 
 def add_applicant(data, resume, new_skills=None):
     """
@@ -153,6 +177,14 @@ def get_skills():
     skills = ref.get()
     return skills if isinstance(skills, list) else []
 
+def get_education():
+    """
+    Fetch the education courses and specializations from the Realtime Database.
+    """
+    ref = db.reference("education")
+    education = ref.get()
+    return education if isinstance(education, dict) else {}
+
 def get_clients():
     """
     Fetch the list of skills from the Realtime Database.
@@ -211,7 +243,18 @@ def reject_application(app_id: str, value: str) -> None:
 # Delete Functions
 
 def delete_applicant(uid):
+    """
+    Delete an applicant and all their associated applications.
+    """
+    # Remove the applicant record
     db.reference(f"applicants/{uid}").delete()
+
+    # Find and remove applications linked to this applicant
+    apps = get_applications_for_applicant(uid)
+    if not apps:
+        return
+    for app_id in apps:
+        delete_application(app_id)
 
 def delete_application(app_id: str) -> None:
     """
