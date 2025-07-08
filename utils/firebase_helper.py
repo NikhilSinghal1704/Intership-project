@@ -73,6 +73,7 @@ def add_applicant(data, resume, new_skills=None):
     applicant_id = str(uuid.uuid4())
     data["id"] = applicant_id
     data["created_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
+    data["updated_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
 
 
     if resume:
@@ -223,7 +224,6 @@ def get_vacancies(breakdown=False):
     return total
 
 
-
 # Update Functions
 
 def update_application_status(app_id: str, new_status: str) -> None:
@@ -239,6 +239,22 @@ def reject_application(app_id: str, value: str) -> None:
     """
     app_ref = db.reference(f"applications/{app_id}/rejected")
     app_ref.set(value)
+
+def update_applicant(uid: str, data: dict, resume=None, new_skills: list = None) -> None:
+    """
+    Update an applicant's data in Firestore.
+    """
+    data["updated_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
+
+    if resume:
+        resume_url = upload_resume_to_firebase(uid, resume)
+        data["resume_url"] = resume_url
+
+    if new_skills:
+        add_skills(new_skills)
+
+    db.reference(f"applicants/{uid}").update(data)
+
 
 # Delete Functions
 

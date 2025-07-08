@@ -3,21 +3,7 @@ import pandas as pd
 from utils.firebase_helper import get_jobs, get_applications_for_jobs
 from datetime import datetime, timedelta
 
-def app():
-
-    # 🛑 Login guard
-    if not st.session_state.get("logged_in", False):
-        st.error("🚫 You must be logged in.")
-        st.stop()
-
-    st.title("📋 All Job Listings")
-
-    jobs = get_jobs()
-
-    if not jobs:
-        st.info("No job postings found.")
-        return
-
+def build_dataframe(jobs):
     rows = []
     for job_id, job in jobs.items():
         applications = get_applications_for_jobs(job_id)
@@ -40,6 +26,25 @@ def app():
 
     df = pd.DataFrame(rows)
     df["Posted On"] = pd.to_datetime(df["Posted On"], errors="coerce")
+
+    return df
+
+def app():
+
+    # 🛑 Login guard
+    if not st.session_state.get("logged_in", False):
+        st.error("🚫 You must be logged in.")
+        st.stop()
+
+    with st.spinner("Loading job postings..."):
+        jobs = get_jobs()
+
+    if not jobs:
+        st.info("No job postings found.")
+        return
+
+    with st.spinner("Building job data..."):
+        df = build_dataframe(jobs)
 
     # -------------------- FILTERS --------------------
     with st.sidebar:
@@ -68,17 +73,21 @@ def app():
         )
 
     # -------------------- APPLY FILTERS --------------------
+    mask = pd.Series(True, index=df.index)
+    
     if title_search:
-        df = df[df["Title"].str.contains(title_search, case=False, na=False)]
-
+        mask &= df["Title"].str.contains(title_search, case=False, na=False)
+    
     if location_filter != "All":
-        df = df[df["Location"] == location_filter]
-
+        mask &= df["Location"] == location_filter
+    
     if mode_filter != "All":
-        df = df[df["Work Mode"] == mode_filter]
-
+        mask &= df["Work Mode"] == mode_filter
+    
     if status_filter != "All":
-        df = df[df["Status"] == status_filter]
+        mask &= df["Status"] == status_filter
+    
+    df = df.loc[mask]
 
     now = datetime.now()
     if date_filter != "All Time":
@@ -95,17 +104,22 @@ def app():
 
     # Reformat date for display
     df["Posted On"] = df["Posted On"].dt.strftime("%Y-%m-%d")
+    
+    # -------------------- DISPLAY --------------------
+    n_rows = len(df)
+    height = min((n_rows + 1) * 35 + 5, 800)  # Cap at e.g. 800px to avoid massive pages
 
-    st.markdown("### 📊 Filtered Job Results")
+    st.header(f"📄 Job Listings ({n_rows})")
     st.dataframe(
         df,
+        use_container_width=True,
+        height=height,
+        hide_index=True,
         column_config={
             "Details": st.column_config.LinkColumn(
                 label="Details",
-                help="Click to view job details",
+                help="Click to view applicant details",
                 display_text="View"
             )
         },
-        hide_index=True,
-        use_container_width=True
     )

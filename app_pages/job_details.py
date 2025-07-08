@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.firebase_helper import get_jobs, get_applications_for_jobs, get_applicants
+from app_pages.view_applicants import build_dataframe, filters
 from datetime import datetime
 import plotly.express as px
 import pandas as pd
@@ -20,9 +21,10 @@ def app():
         st.error("Job not found.")
         return
     
-    tabs = st.tabs(["Details", "Applications"])
+    tab_options = ["Details", "Applications", "Search Applicants"]
+    selected_tab = st.radio("Select View", tab_options, horizontal=True, label_visibility="collapsed")
 
-    with tabs[0]:
+    if selected_tab == "Details":
 
         # -- Header --
         st.title(f"💼 {job.get('job_title', '-')}")
@@ -76,7 +78,7 @@ def app():
         # -- Download or Manage Button --
         st.download_button(label="📥 Export Job Data as JSON", data=str(job), file_name=f"{job_id}.json")
 
-    with tabs[1]:
+    elif selected_tab == "Applications":
         st.subheader("📊 Applications Overview")
         apps = get_applications_for_jobs(job_id)
         if not apps:
@@ -132,4 +134,22 @@ def app():
                 hole=0.3,  # donut-shaped
             )
             fig_pie.update_traces(textposition="inside", textinfo="percent+label")
-            st.plotly_chart(fig_pie, use_container_width=True)   
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+    elif selected_tab == "Search Applicants":
+        st.subheader("🔍 Search Applicants")
+
+        with st.spinner("Loading applicants..."):
+            apps = get_applicants()
+
+        if not apps:
+            st.info("No applicants found.")
+            return
+    
+        # Build DataFrame
+        with st.spinner("Building applicant data..."):
+            app_df = build_dataframe(apps)
+    
+        # --- 🧩 Sidebar Filters ---
+        with st.spinner("Applying filters..."):
+            app_df = filters(df)
