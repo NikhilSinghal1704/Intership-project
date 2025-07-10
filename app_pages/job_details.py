@@ -1,6 +1,6 @@
 import streamlit as st
-from utils.firebase_helper import get_jobs, get_applications_for_jobs, get_applicants
-from app_pages.view_applicants import build_dataframe, filters
+from utils.firebase_helper import get_jobs, get_applications_for_jobs, get_applicants, add_application
+from app_pages.view_applicants import build_dataframe, filters, sort_dataframe
 from datetime import datetime
 import plotly.express as px
 import pandas as pd
@@ -139,17 +139,68 @@ def app():
     elif selected_tab == "Search Applicants":
         st.subheader("🔍 Search Applicants")
 
+        # 1️⃣ Load all applicants
         with st.spinner("Loading applicants..."):
             apps = get_applicants()
-
         if not apps:
             st.info("No applicants found.")
+            return
+
+        # 2️⃣ Fetch existing applications for this job
+        existing_apps = get_applications_for_jobs(job_id)
+        applied_ids = {app["applicant_id"] for app in existing_apps.values()}
+
+        # 3️⃣ Filter out applied applicants
+        filtered_apps = {aid: data for aid, data in apps.items() if aid not in applied_ids}
+        if not filtered_apps:
+            st.info("All available applicants have already applied to this job.")
             return
     
         # Build DataFrame
         with st.spinner("Building applicant data..."):
-            app_df = build_dataframe(apps)
+            app_df = build_dataframe(filtered_apps)
     
         # --- 🧩 Sidebar Filters ---
         with st.spinner("Applying filters..."):
-            app_df = filters(df)
+            app_df = filters(app_df)
+            app_df = sort_dataframe(app_df)
+
+        # Add a 'Select' column for user checkboxes
+        app_df["Select"] = False
+
+        # Display toolbar with Select All
+        st.header(f"👥 Applicants ({len(app_df)})")
+        if st.button("✅ Select All"):
+            app_df["Select"] = True
+
+        # Render in editable table
+        edited_df = st.data_editor(
+            app_df,
+            use_container_width=True,
+            height=min((len(app_df) + 1) * 35 + 5, 800),
+            hide_index=True,
+            column_config={
+                "Details": st.column_config.LinkColumn(
+                    label="Details", help="Click to view applicant details", display_text="View"
+                ),
+                "Select": st.column_config.CheckboxColumn(
+                    label="✔️ Select", help="Select this applicant"
+                ),
+            },
+            disabled=[col for col in app_df.columns if col not in ("Select",)],
+        )
+        
+        if st.button("➕ Create Application(s)"):
+            selected = edited_df[edited_df["Select"]]
+            if selected.empty:
+                st.warning("⚠️ No applicants selected.")
+            else:
+                success_count = 0
+                for _, row in selected.iterrows():
+                    applicant_id = row["UUID"]
+                    try:
+                        add_application(job_id, applicant_id)
+                        success_count += 1
+                    except Exception as e:
+                        st.error(f"Error adding application for {applicant_id}: {e}")
+                st.success(f"✅ {success_count} applicant(s) applied to job.")
