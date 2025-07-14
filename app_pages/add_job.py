@@ -90,7 +90,7 @@ def app():
             else:
                 # Assemble stages
                 stages = [s.strip() for s in stages_input.split(",") if s.strip()]
-                stages = ["applied"] + stages + ["hired"]
+                stages = ["applied"] + stages + ["selected", "offered"]
 
                 job_data = {
                     "job_title": job_title,

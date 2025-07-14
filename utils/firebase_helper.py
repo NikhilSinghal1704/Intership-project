@@ -135,7 +135,7 @@ def add_application(job_id, applicant_id):
         "applicant_id": applicant_id,
         "applied_at": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat(),
         "status": "applied",
-        "rejected": "false"
+        "rejected": "false",
     })
 
 
@@ -230,8 +230,11 @@ def update_application_status(app_id: str, new_status: str) -> None:
     """
     Update the 'status' field of an application document in Firestore.
     """
+    print(f"Updating application {app_id} to status '{new_status}'")
     app_ref = db.reference(f"applications/{app_id}/status")
     app_ref.set(new_status)
+    app_ref = db.reference(f"applications/{app_id}/activity")
+    app_ref.child(new_status).set(datetime.now(ZoneInfo("Asia/Kolkata")).isoformat())
 
 def reject_application(app_id: str, value: str) -> None:
     """

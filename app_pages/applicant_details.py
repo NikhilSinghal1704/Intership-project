@@ -31,25 +31,28 @@ def render_app_card(app_id, app_data):
     current = app_data.get("status", stages[0] if stages else "applied")
     rejected = app_data.get("rejected", "false") == "true"
     st.markdown(f"**Application ID:** {app_id} | **Job:** {job_data.get('job_title','N/A')}")
-    if current == "hired":
-        st.markdown("✅ **Applicant has been hired!**")
-        if st.button("🗑️ Delete", key=f"del_{app_id}"):
-            delete_application(app_id)
-            st.rerun()
-        st.markdown("---")
-        return
     render_stepper(stages, current)
     if rejected:
         st.markdown("❌ **Applicant has been rejected.**")
     col1, col2, col3 = st.columns([1, 1, 1])
+
     if not rejected:
-        if col1.button("➡️ Advance", key=f"adv_{app_id}"):
-            next_idx = min(stages.index(current) + 1, len(stages) - 1)
-            update_application_status(app_id, stages[next_idx])
-            st.rerun()
-        if col2.button("❌ Reject", key=f"rej_{app_id}"):
-            reject_application(app_id, "true")
-            st.rerun()
+        if current == "hired":
+            if col1.button("Make an offer", key=f"offer_{app_id}"):
+                update_application_status(app_id, "offer")
+                st.warning("Offer made! Please update the status accordingly.")
+                st.rerun()
+            if col2.button("❌ Reject", key=f"rej_{app_id}"):
+                reject_application(app_id, "true")
+                st.rerun()
+        else:
+            if col1.button("➡️ Advance", key=f"adv_{app_id}"):
+                next_idx = min(stages.index(current) + 1, len(stages) - 1)
+                update_application_status(app_id, stages[next_idx])
+                st.rerun()
+            if col2.button("❌ Reject", key=f"rej_{app_id}"):
+                reject_application(app_id, "true")
+                st.rerun()
     else:
         if col1.button("➡️ Advance anyway", key=f"adv_{app_id}"):
             next_idx = min(stages.index(current) + 1, len(stages) - 1)
@@ -160,12 +163,12 @@ def app():
     with tabs[1]:
         st.subheader("🔧 Update Applicant Details")
         updated_data, new_skills = form(data=data)
-    
+
         # ⚙️ Resumé + Submit in Form
         with st.form("submit_section"):
             resume = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
             submitted = st.form_submit_button("✅ Submit Application")
-    
+
             if submitted:
                 # Validation using updated_data
                 required = [
@@ -182,11 +185,11 @@ def app():
                 else:
                     # Persist any new course/specialization
                     add_education(updated_data.get("course"), updated_data.get("specialization"))
-    
+
                     # Fallback to existing resume URL if no new file uploaded
                     if not resume:
                         updated_data["resume_url"] = data.get("resume_url")
-    
+
                     update_applicant(uid, updated_data, resume=resume, new_skills=new_skills)
                     st.success("✅ Applicant updated successfully!")
                     st.rerun()

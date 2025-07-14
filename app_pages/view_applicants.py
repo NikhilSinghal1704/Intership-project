@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 from utils.firebase_helper import get_applicants
 
 def build_dataframe(apps):
@@ -25,6 +26,8 @@ def build_dataframe(apps):
             "Preferred Duration": d.get("preferred_duration", ""),
             "Source": d.get("source", ""),
             "notice_period": d.get("notice_period", ""),
+            "Last Update": datetime.fromisoformat(d.get("updated_at", "")).strftime("%B %d, %Y, %I:%M %p") if d.get("updated_at") else "",
+            "Created at": datetime.fromisoformat(d.get("created_at", "")).strftime("%B %d, %Y, %I:%M %p") if d.get("updated_at") else ""
         })
     return pd.DataFrame(rows)
 
