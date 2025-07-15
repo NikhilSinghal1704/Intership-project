@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.firebase_helper import get_jobs, get_applications_for_jobs, get_applicants, add_application, update_application_status
-from app_pages.view_applicants import build_dataframe, filters, sort_dataframe
+from app_pages.view_applicants import build_dataframe, filters, sort_dataframe, search
 from collections import Counter
 from datetime import datetime
 import plotly.express as px
@@ -140,6 +140,9 @@ def app():
         df["Select"] = False
 
         # Display toolbar with Select All
+
+        df = search(df)
+
         st.header(f"👥 Applicants ({len(df)})")
         if st.button("✅ Select All"):
             df["Select"] = True
@@ -217,6 +220,9 @@ def app():
         app_df["Select"] = False
 
         # Display toolbar with Select All
+
+        app_df = search(app_df)
+
         st.header(f"👥 Applicants ({len(app_df)})")
         if st.button("✅ Select All"):
             app_df["Select"] = True
@@ -252,3 +258,4 @@ def app():
                     except Exception as e:
                         st.error(f"Error adding application for {applicant_id}: {e}")
                 st.success(f"✅ {success_count} applicant(s) applied to job.")
+                st.rerun()

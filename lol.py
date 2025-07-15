@@ -1,5 +1,5 @@
 import random
-from utils.firebase_helper import add_job, init_firebase
+from utils.firebase_helper import add_job, init_firebase, add_applicant
 
 def get_dummy_jobs(n):
     """
@@ -46,9 +46,63 @@ def get_dummy_jobs(n):
 
     return dummy_jobs
 
+import string
+
+def create_dummy_applicant():
+    COUNTRY_CODES = {"India": "+91"}
+    country_code = random.choice(list(COUNTRY_CODES.keys()))
+
+    name = random.choice(["Alice", "Bob", "Charlie", "Diana", "Ethan", "Fiona"])
+    phone = ''.join(random.choices(string.digits, k=10))
+    email = f"{name.lower()}{random.randint(100,999)}@example.com"
+    course = random.choice(["B.Tech", "M.Tech", "B.Sc", "MBA", "BCA"])
+    specialization = random.choice(["Computer Science", "Mechanical", "Finance", "AI", "Marketing"])
+    institute = random.choice(["IIT Delhi", "NIT Trichy", "IIM Bangalore", "BITS Pilani", "Anna University"])
+
+    skill_pool = ["Python", "JavaScript", "SQL", "React", "Node.js", "AWS", "Docker"]
+    skill_yoe_map = {skill: round(random.uniform(0.5, 5.0), 1) for skill in random.sample(skill_pool, k=3)}
+    new_skills = skill_yoe_map.keys()
+
+    City = random.choice(["Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad"])
+    State = random.choice(["Delhi", "Maharashtra", "Karnataka", "Tamil Nadu", "Telangana"])
+    Country = country_code
+
+    current_mode = random.choice(["Remote", "Onsite", "Hybrid"])
+    current_dur = random.choice(["Full Time", "Contractual"])
+    preferred_mode = random.choice(["Remote", "Onsite", "Hybrid"])
+    preferred_dur = random.choice(["Full Time", "Contractual"])
+    source = random.choice(["Job Site", "Referral", "Social Media"])
+    total_exp = round(random.uniform(0.5, 10.0), 1)
+    final_notice_period = random.choice(["Immediate", "1 Month", "2 Months", "3 Months"])
+    ctc = random.randint(3, 25) * 100000
+
+    return ({
+        "name": name,
+        "phone": f"{COUNTRY_CODES[country_code]} {phone}",
+        "email": email,
+        "course": course,
+        "specialization": specialization,
+        "institute": institute,
+        "skills": skill_yoe_map,
+        "city": City, "state": State, "country": Country,
+        "current_mode": current_mode,
+        "current_duration": current_dur,
+        "preferred_mode": preferred_mode,
+        "preferred_duration": preferred_dur,
+        "source": source,
+        "experience": total_exp,
+        "notice_period": final_notice_period,
+        "ctc": ctc,
+    }, list(new_skills))
+
+
 # Example usage:
 if __name__ == "__main__":
     init_firebase()
-    for job in get_dummy_jobs(16):
+    '''for job in get_dummy_jobs(16):
         print(job, "\n")
-        add_job(job, new_skills=job["skills"], client=job["client"])
+        add_job(job, new_skills=job["skills"], client=job["client"])'''
+    
+    for applicant in [create_dummy_applicant() for _ in range(10)]:
+        print(applicant[0], "\n")
+        add_applicant(applicant[0], None, new_skills=list(applicant[1]))

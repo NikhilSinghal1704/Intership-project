@@ -8,24 +8,26 @@ def build_dataframe(apps):
     for aid, d in apps.items():
         rows.append({
             "UUID": aid,
-            "Details": f"/applicant_detail?uid={aid}",
+            
             "Name": d.get("name", ""),
             "Email": d.get("email", ""),
-            "Phone": d.get("phone", ""),
-            "Course": d.get("course", ""),
-            "Specialization": d.get("specialization", ""),
             "Institute": d.get("institute", ""),
             "Experience": float(d.get("experience", 0)),
             "CTC": float(d.get("ctc", 0)),
-            "Country": d.get("country", ""),
-            "State": d.get("state", ""),
-            "City": d.get("city", ""),
             "Current Mode": d.get("current_mode", ""),
             "Current Duration": d.get("current_duration", ""),
             "Preferred Mode": d.get("preferred_mode", ""),
             "Preferred Duration": d.get("preferred_duration", ""),
+            "City": d.get("city", ""),
+            "State": d.get("state", ""),
+            "Country": d.get("country", ""),
+            "Details": f"/applicant_detail?uid={aid}",
+            "Skills": ",".join(d.get("skills", {}).keys()),
+            "Phone": d.get("phone", ""),
+            "Course": d.get("course", ""),
+            "Specialization": d.get("specialization", ""),
             "Source": d.get("source", ""),
-            "notice_period": d.get("notice_period", ""),
+            "Notice Period": d.get("notice_period", ""),
             "Last Update": datetime.fromisoformat(d.get("updated_at", "")).strftime("%B %d, %Y, %I:%M %p") if d.get("updated_at") else "",
             "Created at": datetime.fromisoformat(d.get("created_at", "")).strftime("%B %d, %Y, %I:%M %p") if d.get("updated_at") else ""
         })
@@ -48,11 +50,6 @@ def parse_notice_period(val):
 
 def filters(df, pre_filters=None):
     pre_filters = pre_filters or {}
-
-    st.sidebar.subheader("🔎 Search")
-    keyword = st.sidebar.text_input("Keyword (Name or Email)", value=pre_filters.get("keyword", ""))
-    if keyword:
-        df = df[df["Name"].str.contains(keyword, case=False) | df["Email"].str.contains(keyword, case=False)]
 
     st.sidebar.subheader("📊 Filters")
 
@@ -89,22 +86,43 @@ def filters(df, pre_filters=None):
 
     # Notice Period Filter
     notice_options = ["Immediate", "1 Month", "2 Months", "3 Months", "More than 3 Months"]
-    default_notice = pre_filters.get("notice_period", ["All"])
+    default_notice = pre_filters.get("Notice Period", ["All"])
     valid_notice = [val for val in default_notice if val in notice_options]
     selected_notice = st.sidebar.multiselect("Notice Period", ["All"] + notice_options, default=valid_notice or ["All"])
 
     if "All" not in selected_notice:
         if "More than 3 Months" in selected_notice:
-            df = df[df["notice_period"].apply(lambda x: parse_notice_period(x) > 3)]
+            df = df[df["Notice Period"].apply(lambda x: parse_notice_period(x) > 3)]
         else:
             selected_nums = [parse_notice_period(opt) for opt in selected_notice]
-            df = df[df["notice_period"].apply(lambda x: parse_notice_period(x) in selected_nums)]
+            df = df[df["Notice Period"].apply(lambda x: parse_notice_period(x) in selected_nums)]
+
+    return df
+
+def search(df):
+    st.subheader("🔎 Search")
+
+    # Create two columns with ratio 30:70
+    col1, col2 = st.columns([3, 7])
+
+    with col1:
+        search_by = st.selectbox("Search By", ["UUID", "Name or Email"])
+
+    with col2:
+        if search_by == "UUID":
+            keyword = st.text_input("Applicant UUID", placeholder="Enter UUID to filter")
+            if keyword:
+                df = df[df["UUID"].str.contains(keyword, case=False)]
+        else:
+            keyword = st.text_input("Keyword", placeholder="Enter name or email to search")
+            if keyword:
+                df = df[df["Name"].str.contains(keyword, case=False) | df["Email"].str.contains(keyword, case=False)]
 
     return df
 
 def sort_dataframe(df, pre_sort=None):
     # Add numeric column for notice period sorting
-    df["notice_period_num"] = df["notice_period"].apply(parse_notice_period)
+    df["notice_period_num"] = df["Notice Period"].apply(parse_notice_period)
 
     sort_options = {
         "None": None,
@@ -151,6 +169,8 @@ def app():
         df = sort_dataframe(df)
 
     # --- 📄 Display ---
+
+    df = search(df)  # Apply search after filters and sorting
     
     # Calculate dynamic height: ~35px per row + header
     n_rows = len(df)

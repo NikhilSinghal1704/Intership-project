@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 import uuid
 import mimetypes
 import os
+from nanoid import generate
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,6 +19,18 @@ def init_firebase():
             #"storageBucket": "test-1f76f.appspot.com"
         })
     return db.reference("/")
+
+def generate_unique_numeric_id(path, length=6):
+    alphabet = '0123456789'
+    max_attempts = 10000  # Prevent infinite loops
+
+    for _ in range(max_attempts):
+        uid = generate(alphabet, length)
+        ref = db.reference(f'{path}/{uid}')
+        if ref.get() is None:  # UID does not exist
+            return uid
+
+    raise Exception("Unable to generate a unique ID after many attempts.")
 
 
 # Add Functions
@@ -70,7 +83,7 @@ def add_applicant(data, resume, new_skills=None):
     Save applicant data to Firestore and update skills list if new ones are added.
     """
     
-    applicant_id = str(uuid.uuid4())
+    applicant_id = str(generate_unique_numeric_id("applicants"))
     data["id"] = applicant_id
     data["created_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
     data["updated_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
@@ -80,7 +93,7 @@ def add_applicant(data, resume, new_skills=None):
         resume_url = upload_resume_to_firebase(applicant_id, resume)
         data["resume_url"] = resume_url
     else:
-        data["resume_url"] = None
+        data["resume_url"] = 'https://www.princexml.com/samples/icelandic/dictionary.pdf'
 
     # Save applicant data
     applicants_ref = db.reference("applicants")
@@ -114,7 +127,7 @@ def add_job(data, new_skills=None, client=None):
     """
     Save job opening data to Firestore.
     """
-    job_id = str(uuid.uuid4())
+    job_id = str(generate_unique_numeric_id("jobs"))
     data["id"] = job_id
     data["posted_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
 
@@ -128,7 +141,7 @@ def add_job(data, new_skills=None, client=None):
 
 def add_application(job_id, applicant_id):
     applications_ref = db.reference("applications")
-    new_id = str(uuid.uuid4())
+    new_id = str(generate_unique_numeric_id("applications"))
     applications_ref.child(new_id).set({
         "id": new_id,
         "job_id": job_id,

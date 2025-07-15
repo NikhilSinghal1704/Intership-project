@@ -32,13 +32,12 @@ def render_app_card(app_id, app_data):
     rejected = app_data.get("rejected", "false") == "true"
     st.markdown(f"**Application ID:** {app_id} | **Job:** {job_data.get('job_title','N/A')}")
     render_stepper(stages, current)
-    if rejected:
-        st.markdown("❌ **Applicant has been rejected.**")
+        
     col1, col2, col3 = st.columns([1, 1, 1])
 
     if not rejected:
         if current == "hired":
-            if col1.button("Make an offer", key=f"offer_{app_id}"):
+            if col1.button("Offer Made", key=f"offer_{app_id}"):
                 update_application_status(app_id, "offer")
                 st.warning("Offer made! Please update the status accordingly.")
                 st.rerun()
@@ -54,6 +53,7 @@ def render_app_card(app_id, app_data):
                 reject_application(app_id, "true")
                 st.rerun()
     else:
+        st.markdown("❌ **Applicant has been rejected.**")
         if col1.button("➡️ Advance anyway", key=f"adv_{app_id}"):
             next_idx = min(stages.index(current) + 1, len(stages) - 1)
             reject_application(app_id, "false")
