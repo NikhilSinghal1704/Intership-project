@@ -36,6 +36,8 @@ def app():
             st.write(f"**Location:** {job.get('location', '-')}")
             st.write(f"**Work Mode:** {job.get('work_mode', '-')}")
             st.write(f"**Duration:** {job.get('job_duration', '-')}")
+            st.write(f"**Client:** {job.get('client', '-')}")
+            st.write(f"**Contact Person:** {job.get('contact_person', '-')} | **Contact:** {job.get('contact', '-')}")
         with col2:
             st.write(f"**Budget:** {job.get('budget', '-')}")
             st.write(f"**Vacancies:** {job.get('vacancies', '-')}")
