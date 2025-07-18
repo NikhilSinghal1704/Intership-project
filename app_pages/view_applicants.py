@@ -13,7 +13,8 @@ def build_dataframe(apps):
             "Email": d.get("email", ""),
             "Institute": d.get("institute", ""),
             "Experience": float(d.get("experience", 0)),
-            "CTC": float(d.get("ctc", 0)),
+            "Current CTC": float(d.get("current_ctc", 0)),
+            "Expected CTC": float(d.get("expected_ctc", 0)),
             "Current Mode": d.get("current_mode", ""),
             "Current Duration": d.get("current_duration", ""),
             "Preferred Mode": d.get("preferred_mode", ""),
@@ -22,6 +23,7 @@ def build_dataframe(apps):
             "State": d.get("state", ""),
             "Country": d.get("country", ""),
             "Details": f"/applicant_detail?uid={aid}",
+            "Resume": d.get("resume_url", "Not Available"),
             "Skills": ",".join(d.get("skills", {}).keys()),
             "Phone": d.get("phone", ""),
             "Course": d.get("course", ""),
@@ -54,7 +56,7 @@ def filters(df, pre_filters=None):
     st.sidebar.subheader("📊 Filters")
 
     # Numeric filters
-    for num_col in ["Experience", "CTC"]:
+    for num_col in ["Experience", "Current CTC", "Expected CTC"]:
         col_min, col_max = float(df[num_col].min()), float(df[num_col].max())
         min_val = pre_filters.get(f"{num_col}_min", col_min)
         max_val = pre_filters.get(f"{num_col}_max", col_max)
@@ -188,6 +190,11 @@ def app():
                 label="Details",
                 help="Click to view applicant details",
                 display_text="View"
-            )
+            ),
+            "Resume": st.column_config.LinkColumn(
+                label="Resume",
+                help="Click to view resume",
+                display_text="View Resume"
+            ),
         },
     )

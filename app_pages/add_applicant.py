@@ -165,9 +165,14 @@ def form(data={}):
         final_notice_period = notice_period
 
 
-    ctc = st.number_input(
-        "Annual CTC (INR)",
-        value=float(data.get("ctc", 0)),
+    current_ctc = st.number_input(
+        "Current Annual CTC (INR)",
+        value=float(data.get("current_ctc", 0)),
+        step=1000.0
+    )
+    expected_ctc = st.number_input(
+        "Expected Annual CTC (INR)",
+        value=float(data.get("expected_ctc", 0)),
         step=1000.0
     )
 
@@ -187,7 +192,8 @@ def form(data={}):
         "source": source,
         "experience": total_exp,
         "notice_period": final_notice_period,
-        "ctc": ctc,
+        "current_ctc": current_ctc,
+        "expected_ctc": expected_ctc,
     }, new_skills)
 
 
@@ -201,7 +207,7 @@ def app():
     # ⚙️ Resumé + Submit in Form
     with st.form("submit_section"):
         resume = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
-        submitted = st.form_submit_button("✅ Submit Application")
+        submitted = st.form_submit_button("✅ Submit")
 
         if submitted:
             # Validation

@@ -36,7 +36,7 @@ def render_app_card(app_id, app_data):
     col1, col2, col3 = st.columns([1, 1, 1])
 
     if not rejected:
-        if current == "hired":
+        if current == "Selected":
             if col1.button("Offer Made", key=f"offer_{app_id}"):
                 update_application_status(app_id, "offer")
                 st.warning("Offer made! Please update the status accordingly.")
@@ -87,7 +87,7 @@ def app():
 
     tabs = st.tabs(["Details", "update", "Applications"])
     with tabs[0]:
-        st.title(f"👤 {data['name']}")
+        st.title(f"👤 {data['name']} (id : {data['id']})")
 
         # --- Table for top metrics (2 rows, 4 columns) ---
 
@@ -114,7 +114,7 @@ def app():
             st.subheader("🎓 Education")
             st.write(f"**Course:** {data.get('course', '-')} | **Specialization:** {data.get('specialization', '-')}")
             st.write(f"**Institute:** {data.get('institute', '-')}")
-            st.write(f"**Current CTC:** ₹{data.get('ctc', '-'):,}")
+            st.write(f"**Current CTC:** ₹{data.get('current_ctc', '-')} | **Expected CTC:** ₹{data.get('expected_ctc', '-')}")
 
             st.markdown("### 🛠️ Skills & Experience")
 

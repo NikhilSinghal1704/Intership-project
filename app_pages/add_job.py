@@ -81,7 +81,7 @@ def app():
         benefits = st.text_area("Benefits", height=100)
         st.markdown("</section>", unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("➕ Add Job Opening")
+        submitted = st.form_submit_button("Submit Job Opening")
 
         if submitted:
             required_fields = [job_title, work_mode, required_skills, vacancies]

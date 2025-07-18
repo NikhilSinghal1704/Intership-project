@@ -144,9 +144,10 @@ def app():
         df = search(df)
 
         st.header(f"👥 Applicants ({len(df)})")
+        applicant_select_all = False
         if st.button("✅ Select All"):
             df["Select"] = True
-    
+            applicant_select_all = True    
         st.write(f"Showing {len(df)} applicant(s) in stage: **{selected_stage}**")
     
         n_rows = len(df)
@@ -162,11 +163,19 @@ def app():
                     help="Click to view applicant details",
                     display_text="View"
                 ),
+                "Resume": st.column_config.LinkColumn(
+                    label="Resume",
+                    help="Click to view resume",
+                    display_text="View Resume"
+                ),
                 "Select": st.column_config.CheckboxColumn(
                     label="✔️ Select", help="Select this applicant"
                 ),
             },
         )
+
+        if applicant_select_all:
+            edited_df["Select"] = True
 
         if st.button("Advance Application(s)"):
             selected = edited_df[edited_df["Select"]]
@@ -224,8 +233,10 @@ def app():
         app_df = search(app_df)
 
         st.header(f"👥 Applicants ({len(app_df)})")
+        app_select_all = False
         if st.button("✅ Select All"):
             app_df["Select"] = True
+            app_select_all = True
 
         # Render in editable table
         edited_df = st.data_editor(
@@ -237,12 +248,20 @@ def app():
                 "Details": st.column_config.LinkColumn(
                     label="Details", help="Click to view applicant details", display_text="View"
                 ),
+                "Resume": st.column_config.LinkColumn(
+                    label="Resume",
+                    help="Click to view resume",
+                    display_text="View Resume"
+                ),
                 "Select": st.column_config.CheckboxColumn(
                     label="✔️ Select", help="Select this applicant"
                 ),
             },
             disabled=[col for col in app_df.columns if col not in ("Select",)],
         )
+
+        if app_select_all:
+            edited_df = app_df
         
         if st.button("➕ Create Application(s)"):
             selected = edited_df[edited_df["Select"]]
