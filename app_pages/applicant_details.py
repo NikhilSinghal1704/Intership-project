@@ -228,7 +228,7 @@ def app():
         # Render all application cards
         for aid, ad in apps.items():
             if ad.get("status") == "hired":
-                st.markdown(f"**Application ID:** {ad["id"]}")
+                st.markdown(f"**Application ID:** {ad['id']}")
                 st.markdown("🏆 **Hired**")           
                 continue
             render_app_card(aid, ad)
