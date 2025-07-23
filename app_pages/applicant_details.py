@@ -36,9 +36,20 @@ def render_app_card(app_id, app_data):
     col1, col2, col3 = st.columns([1, 1, 1])
 
     if not rejected:
-        if current == "Selected":
+        if current == "offered":
+            if col1.button("Offer Accepted", key=f"offer_{app_id}"):
+                update_application_status(app_id, "hired")
+                st.success("✅ Offer accepted! Redirecting to add hired page...")
+                redirect_url = f"/add_hired?job_id={app_data["job_id"]}&applicant_id={app_data['applicant_id']}&application_id={app_data["id"]}"
+                st.markdown(f'<meta http-equiv="refresh" content="0; url={redirect_url}" />', unsafe_allow_html=True)
+                st.rerun()
+            if col2.button("❌ Reject", key=f"rej_{app_id}"):
+                reject_application(app_id, "true")
+                st.rerun()
+        elif current == "selected":
             if col1.button("Offer Made", key=f"offer_{app_id}"):
-                update_application_status(app_id, "offer")
+                next_idx = min(stages.index(current) + 1, len(stages) - 1)
+                update_application_status(app_id, stages[next_idx])
                 st.warning("Offer made! Please update the status accordingly.")
                 st.rerun()
             if col2.button("❌ Reject", key=f"rej_{app_id}"):
@@ -63,6 +74,7 @@ def render_app_card(app_id, app_data):
             reject_application(app_id, "false")
             update_application_status(app_id, "applied")
             st.rerun()
+
     if col3.button("🗑️ Delete", key=f"del_{app_id}"):
         delete_application(app_id)
         st.rerun()
@@ -142,23 +154,34 @@ def app():
             else:
                 st.write("No resume uploaded.")
 
-        st.markdown("---")
-
         st.subheader("⚠️ Delete Applicant")
         st.warning("This action will permanently delete the applicant and all associated applications.")
 
-        if st.button("🗑️ Delete Applicant"):
-            delete_applicant(uid)  # You said this is implemented
-            st.success("✅ Applicant deleted successfully.")
+        # First confirmation step
+        if "confirm_delete" not in st.session_state:
+            st.session_state.confirm_delete = False
 
-            # Clear query params
-            st.query_params.clear()
+        # Step 1: User clicks Delete button
+        if not st.session_state.confirm_delete:
+            if st.button("🗑️ Delete Applicant"):
+                st.session_state.confirm_delete = True
+                st.toast("Please confirm deletion", icon="❗")
 
-            # Optional: Small delay or spinner
-            st.toast("Redirecting...", icon="🔁")
-
-            # Trigger a rerun to reflect state
-            st.rerun()
+        # Step 2: Show confirmation buttons
+        if st.session_state.confirm_delete:
+            st.error("Are you absolutely sure you want to delete this applicant?")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ Yes, Delete"):
+                    delete_applicant(uid)  # Your existing function
+                    st.success("✅ Applicant deleted successfully.")
+                    st.query_params.clear()
+                    st.toast("Redirecting...", icon="🔁")
+                    st.rerun()
+            with col2:
+                if st.button("❌ Cancel"):
+                    st.session_state.confirm_delete = False
+                    st.info("Deletion cancelled.")
 
     with tabs[1]:
         st.subheader("🔧 Update Applicant Details")
@@ -204,6 +227,10 @@ def app():
 
         # Render all application cards
         for aid, ad in apps.items():
+            if ad.get("status") == "hired":
+                st.markdown(f"**Application ID:** {ad["id"]}")
+                st.markdown("🏆 **Hired**")           
+                continue
             render_app_card(aid, ad)
 
 

@@ -130,6 +130,7 @@ def add_job(data, new_skills=None, client=None):
     job_id = str(generate_unique_numeric_id("jobs"))
     data["id"] = job_id
     data["posted_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
+    data["updated_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
 
     jobs_ref = db.reference("jobs")
     jobs_ref.child(job_id).set(data)
@@ -150,6 +151,17 @@ def add_application(job_id, applicant_id):
         "status": "applied",
         "rejected": "false",
     })
+
+def add_hired(data):
+    """
+    Save hired applicant data to Firestore.
+    """
+    hired_id = str(generate_unique_numeric_id("hired"))
+    data["id"] = hired_id
+    #data["hired_on"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
+    
+    hired_ref = db.reference("hired")
+    hired_ref.child(hired_id).set(data)
 
 
 # Get Functions
@@ -271,6 +283,16 @@ def update_applicant(uid: str, data: dict, resume=None, new_skills: list = None)
 
     db.reference(f"applicants/{uid}").update(data)
 
+def update_job(job_id, data, new_skills=[], client=None):
+    data["updated_at"] = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
+
+    if new_skills:
+        add_skills(new_skills)
+    if client:
+        add_clients([client])
+
+    db.reference(f"jobs/{job_id}").update(data)
+
 
 # Delete Functions
 
@@ -283,6 +305,17 @@ def delete_applicant(uid):
 
     # Find and remove applications linked to this applicant
     apps = get_applications_for_applicant(uid)
+    if not apps:
+        return
+    for app_id in apps:
+        delete_application(app_id)
+
+def delete_job(job_id):
+
+    db.reference(f"jobs/{job_id}").delete()
+
+    # Find and remove applications linked to this applicant
+    apps = get_applications_for_jobs(job_id)
     if not apps:
         return
     for app_id in apps:

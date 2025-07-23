@@ -25,96 +25,155 @@ def app():
     """, unsafe_allow_html=True)
 
     st.title("📌 Add New Job Opening")
+
     existing_skills = get_skills()
     existing_clients = get_clients()
 
     with st.form("job_form"):
-        # Section 1: Core Job Info
-        st.markdown('<section class="job-form">', unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        with col1:
-            job_title = st.text_input("Job Title *")
-            department = st.text_input("Department")
-            location = st.text_input("Job Location")
-            work_mode = st.selectbox("Work Mode *", ["Onsite", "Remote", "Hybrid"])
-            vacancies = st.number_input("Vacancies *", min_value=1, step=1)
-            client = st.selectbox(
-                "Client Name (if applicable)",
-                options=existing_clients,
-                help="Select or type to add new.",
-                accept_new_options=True
-            )
-        with col2:
-            experience_required = st.number_input(
-                "Experience Required (years)", min_value=0.0, step=0.5
-            )
-            qualifications = st.text_input("Qualifications")
-            budget = st.text_input("Salary Range (Annual CTC)")
-            contact_person = st.text_input("Contact Person")
-            contact = st.text_input("Contact Information")
-            posted_by = st.text_input("Posted By (Email) *")
-        st.markdown('</section>', unsafe_allow_html=True)
-
-        # Section 2: Skills & Process
-        st.markdown('<section class="job-form">', unsafe_allow_html=True)
-        required_skills = st.multiselect(
-            "Required Skills *",
-            options=existing_skills,
-            help="Select or type to add new.",
-            accept_new_options=True
-        )
-        stages_input = st.text_input(
-            "Stages (comma-separated, in order)",
-            placeholder="e.g. Sourcing, Screening, Interview, Offer"
-        )
-        job_duration = st.selectbox(
-            "Job Duration",
-            options=["Full Time", "Contractual (6+6)", "Contractual (1 year )", "Internship"],
-            help="Select the type of job duration."
-        )
-        st.markdown('</section>', unsafe_allow_html=True)
-
-        # Section 3: Description & Benefits
-        st.markdown('<section class="job-form">', unsafe_allow_html=True)
-        description = st.text_area("Job Description", height=150)
-        responsibilities = st.text_area("Responsibilities", height=100)
-        benefits = st.text_area("Benefits", height=100)
-        st.markdown("</section>", unsafe_allow_html=True)
-
+        job_data = render_job_form(existing_skills, existing_clients)
         submitted = st.form_submit_button("Submit Job Opening")
 
         if submitted:
-            required_fields = [job_title, work_mode, required_skills, vacancies]
+            # Validate required fields
+            required_fields = [
+                #job_data["job_title"],
+                #job_data["work_mode"],
+                #job_data["skills"],
+                #job_data["vacancies"]
+            ]
             if not all(required_fields):
                 st.warning("Please complete all required fields marked with *.")
             else:
-                # Assemble stages
+                # Process stages
+                stages_input = job_data.get("hiring_process_raw", "")
                 stages = [s.strip() for s in stages_input.split(",") if s.strip()]
-                stages = ["applied"] + stages + ["selected", "offered"]
+                job_data["hiring_process"] = ["applied"] + stages + ["selected", "offered"]
 
-                job_data = {
-                    "job_title": job_title,
-                    "department": department,
-                    "location": location,
-                    "work_mode": work_mode,
-                    "experience_required": experience_required,
-                    "budget": budget,
-                    "vacancies": int(vacancies),
-                    "skills": required_skills,
-                    "hiring_process": stages,
-                    "job_duration": job_duration,
-                    "description": description,
-                    "responsibilities": responsibilities,
-                    "benefits": benefits,
-                    "qualifications": qualifications,
-                    "client": client,
-                    "contact_person": contact_person,
-                    "contact": contact,
-                    "posted_by": posted_by,
-                    "status": "open",
-                }
+                # Remove raw input key if it exists
+                job_data.pop("hiring_process_raw", None)
 
-                new_skills = set(required_skills) - set(existing_skills)
-                add_job(job_data, list(new_skills)) if not client else add_job(job_data, list(new_skills), client)
+                new_skills = set(job_data["skills"]) - set(existing_skills)
+                
+                add_job(job_data, list(new_skills), job_data["client"])
+
                 st.success("✅ Job opening added successfully!")
                 st.rerun()
+
+
+def render_job_form(existing_skills, existing_clients, job_data=None):
+    st.markdown("## 📝 Job Information")
+
+    job_data = job_data or {}
+
+    # --- Section 1: Core Info ---
+    with st.container():
+        col1, col2 = st.columns(2)
+        with col1:
+            job_title = st.text_input("📌 Job Title *", value=job_data.get("job_title", ""))
+            department = st.text_input("🏢 Department", value=job_data.get("department", ""))
+            location = st.text_input("📍 Job Location", value=job_data.get("location", ""))
+            work_mode = st.selectbox(
+                "🧭 Work Mode *", 
+                options=["Onsite", "Remote", "Hybrid"], 
+                index=["Onsite", "Remote", "Hybrid"].index(job_data.get("work_mode", "Onsite"))
+            )
+            vacancies = st.number_input(
+                "👥 Vacancies *", 
+                min_value=1, 
+                step=1,
+                value=job_data.get("vacancies", 1)
+            )
+
+        with col2:
+            client = st.selectbox(
+                "🤝 Client Name (if applicable)",
+                options=existing_clients,
+                index=existing_clients.index(job_data["client"]) if job_data.get("client") in existing_clients else 0,
+                help="Select or type to add a new client.",
+                accept_new_options=True
+            )
+            experience_required = st.number_input(
+                "💼 Experience Required (years)", 
+                min_value=0.0, 
+                step=0.5, 
+                value=job_data.get("experience_required", 0.0)
+            )
+            qualifications = st.text_input("🎓 Qualifications", value=job_data.get("qualifications", ""))
+            budget = st.text_input("💰 Salary Range (Annual CTC)", value=job_data.get("budget", ""))
+            posted_by = st.text_input("📧 Posted By (Email) *", value=job_data.get("posted_by", ""))
+
+    st.divider()
+
+    # --- Section 2: Contact Info (Optional) ---
+    with st.expander("📇 Contact Person (Optional)"):
+        col1, col2 = st.columns(2)
+        with col1:
+            contact_person = st.text_input("👤 Contact Person", value=job_data.get("contact_person", ""))
+        with col2:
+            contact = st.text_input("📞 Contact Information", value=job_data.get("contact", ""))
+
+    st.divider()
+
+    # --- Section 3: Skills & Hiring Process ---
+    st.markdown("## 🛠️ Skills & Process")
+
+    required_skills = st.multiselect(
+        "✅ Required Skills *",
+        options=existing_skills,
+        default=job_data.get("skills", []),
+        help="Select from existing or add new ones.",
+        accept_new_options=True
+    )
+
+    stages_input = st.text_input(
+        "📈 Stages (comma-separated)",
+        value=', '.join(job_data.get("hiring_process", [])),
+        placeholder="e.g. Sourcing, Screening, Interview, Offer"
+    )
+
+    job_duration = st.selectbox(
+        "⏳ Job Duration",
+        options=["Full Time", "Contractual (6+6)", "Contractual (1 year )", "Internship"],
+        index=["Full Time", "Contractual (6+6)", "Contractual (1 year )", "Internship"].index(
+            job_data.get("job_duration", "Full Time")
+        ),
+        help="Specify job engagement type."
+    )
+
+    st.divider()
+
+    # --- Section 4: Job Description ---
+    st.markdown("## 🧾 Job Description")
+
+    description = st.text_area("📋 Job Description", height=150, value=job_data.get("description", ""))
+    responsibilities = st.text_area("📌 Responsibilities", height=100, value=job_data.get("responsibilities", ""))
+    benefits = st.text_area("🎁 Benefits", height=100, value=job_data.get("benefits", ""))
+
+    # --- Return assembled job data ---
+    new_job_data = {
+        "job_title": job_title,
+        "department": department,
+        "location": location,
+        "work_mode": work_mode,
+        "experience_required": experience_required,
+        "budget": budget,
+        "vacancies": int(vacancies),
+        "skills": required_skills,
+        "hiring_process_raw": stages_input,
+        "job_duration": job_duration,
+        "description": description,
+        "responsibilities": responsibilities,
+        "benefits": benefits,
+        "qualifications": qualifications,
+        "client": client,
+        "contact_person": contact_person,
+        "contact": contact,
+        "posted_by": posted_by,
+        "status": job_data.get("status", "open"),
+    }
+
+    return new_job_data
+
+
+
+
