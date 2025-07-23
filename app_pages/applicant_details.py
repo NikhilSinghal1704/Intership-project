@@ -40,7 +40,7 @@ def render_app_card(app_id, app_data):
             if col1.button("Offer Accepted", key=f"offer_{app_id}"):
                 update_application_status(app_id, "hired")
                 st.success("✅ Offer accepted! Redirecting to add hired page...")
-                redirect_url = f"/add_hired?job_id={app_data["job_id"]}&applicant_id={app_data['applicant_id']}&application_id={app_data["id"]}"
+                redirect_url = f"/add_hired?job_id={app_data['job_id']}&applicant_id={app_data['applicant_id']}&application_id={app_data['id']}"
                 st.markdown(f'<meta http-equiv="refresh" content="0; url={redirect_url}" />', unsafe_allow_html=True)
                 st.rerun()
             if col2.button("❌ Reject", key=f"rej_{app_id}"):
