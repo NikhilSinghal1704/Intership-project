@@ -248,6 +248,17 @@ def get_vacancies(breakdown=False):
         return total, vacancies_by_dept, vacancies_by_mode
     return total
 
+def get_hired_applications():
+    all_apps = db.reference("hired").get() or {}
+    if not all_apps:
+        return []
+    result = []
+    for app_id, data in all_apps.items():
+        entry = data.copy()
+        result.append(entry)
+
+    return result
+
 
 # Update Functions
 

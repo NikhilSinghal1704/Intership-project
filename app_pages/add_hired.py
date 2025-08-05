@@ -52,4 +52,5 @@ def app():
 
             add_hired(hired_data)
             st.success("✅ Hired record saved successfully!")
-            st.rerun()
+            redirect_url = f"/view_hired"
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={redirect_url}" />', unsafe_allow_html=True)

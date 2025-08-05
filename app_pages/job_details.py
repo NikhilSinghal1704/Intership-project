@@ -120,7 +120,7 @@ def app():
             st.info("No applications found for this job.")
             return
         
-        stages = job["hiring_process"]
+        stages = job["hiring_process"] + ['hired']
 
         stage_counts = {}
 
@@ -246,6 +246,9 @@ def app():
                                 if selected_stage == "rejected":
                                     reject_application(uids[applicant_id], "false")
                                 update_application_status(uids[applicant_id], stages[next_idx])
+                                if selected_stage == "offered":
+                                    redirect_url = f"/add_hired?job_id={job_id}&applicant_id={applicant_id}&application_id={uids[applicant_id]}"
+                                    st.markdown(f'<meta http-equiv="refresh" content="0; url={redirect_url}" />', unsafe_allow_html=True)
                                 success_count += 1
                             except Exception as e:
                                 st.error(f"Error updating application for {applicant_id}: {e}")
@@ -298,9 +301,10 @@ def app():
 
         st.header(f"👥 Applicants ({len(app_df)})")
         app_select_all = False
+        st.session_state.app_select_all = False
         if st.button("✅ Select All"):
             app_df["Select"] = True
-            app_select_all = True
+            st.session_state.app_select_all = True
 
         # Render in editable table
         edited_df = st.data_editor(
@@ -324,8 +328,9 @@ def app():
             disabled=[col for col in app_df.columns if col not in ("Select",)],
         )
 
-        if app_select_all:
+        if st.session_state.app_select_all:
             edited_df = app_df
+            edited_df["Select"] = True
         
         if st.button("➕ Create Application(s)"):
             selected = edited_df[edited_df["Select"]]
