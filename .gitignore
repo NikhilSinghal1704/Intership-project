@@ -2,3 +2,5 @@ cred.json
 __pycache__/
 .env
 users.json
+token.pickle
+credentials.json
