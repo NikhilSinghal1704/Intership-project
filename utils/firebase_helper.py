@@ -7,6 +7,7 @@ import mimetypes
 import os
 from nanoid import generate
 from dotenv import load_dotenv
+from utils.upload_resume import upload_to_folder
 
 load_dotenv()
 
@@ -121,7 +122,14 @@ def upload_resume_to_firebase(applicant_id, file):
     with open(file_path, "wb") as f:
         f.write(file.getbuffer())
 
-    return file_path
+    # Upload to Google Drive
+    folder_id = os.environ.get("folder_id")
+    share_url = upload_to_folder(file_path, f"{applicant_id}.pdf", folder_id)
+
+    # Delete local file
+    os.remove(file_path)
+
+    return share_url
 
 def add_job(data, new_skills=None, client=None):
     """
