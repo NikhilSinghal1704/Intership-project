@@ -220,5 +220,12 @@ def app():
 
 
                 add_applicant(data, resume, new_skills=new_skills)
-                st.success("✅ Applicant added successfully!")
-                st.rerun()
+                st.session_state["show_success_popup"] = True
+
+    if st.session_state.get("show_success_popup", False):
+        st.success("✅ Applicant added successfully!")
+        if st.button("OK"):
+            st.session_state["show_success_popup"] = False
+            redirect_url = f"/view_applicants"
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={redirect_url}" />', unsafe_allow_html=True)
+            st.rerun()
