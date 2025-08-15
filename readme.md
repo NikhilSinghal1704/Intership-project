@@ -1,6 +1,7 @@
 # **Applicant Manager**
 
 *A Streamlit-based Applicant Tracking System with Firebase backend and Google Drive resume storage*
+Check out the project here: [Live Site](https://internship.nik-server.in/)
 
 ---
 
@@ -37,7 +38,14 @@ The following diagram illustrates how data moves between the UI, Firebase, and G
 
 ## 📸 **Screenshots**
 
-*(Add screenshots of Dashboard, Add Applicant form, Job posting form, etc.)*
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### View Applicants
+![View Applicants](docs/screenshots/view_applicants.png)
+
+### Add Applicant
+![Add Applicant](docs/screenshots/add_applicant.png)
 
 ---
 
