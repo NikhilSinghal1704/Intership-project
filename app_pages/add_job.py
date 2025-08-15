@@ -55,9 +55,15 @@ def app():
                 new_skills = set(job_data["skills"]) - set(existing_skills)
                 
                 add_job(job_data, list(new_skills), job_data["client"])
+                st.session_state["show_success_popup"] = True
 
-                st.success("✅ Job opening added successfully!")
-                st.rerun()
+    if st.session_state.get("show_success_popup", False):
+        st.success("✅ Job opening added successfully!")
+        if st.button("OK"):
+            st.session_state["show_success_popup"] = False
+            redirect_url = f"/add_job"
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={redirect_url}" />', unsafe_allow_html=True)
+            st.rerun()
 
 
 def render_job_form(existing_skills, existing_clients, job_data=None):
